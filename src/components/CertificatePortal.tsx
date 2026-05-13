@@ -15,6 +15,12 @@ export default function CertificatePortal({ course }: CertificatePortalProps) {
   const [unlockedIds, setUnlockedIds] = useState<Set<number>>(new Set());
   const [errors, setErrors] = useState<{ [key: number]: string }>({});
 
+  const maskName = (name: string) => {
+    if (name.length <= 1) return name;
+    if (name.length === 2) return name[0] + '*';
+    return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+  };
+
   const filteredStudents = students.filter(s => 
     s.courseId === course.id && s.name.includes(searchTerm)
   );
@@ -118,7 +124,7 @@ export default function CertificatePortal({ course }: CertificatePortalProps) {
                       <User size={20} />
                     </div>
                     <h3 className="text-xl font-bold text-slate-800">
-                      {student.name}
+                      {maskName(student.name)}
                       <span className="block text-[11px] font-medium text-slate-400 mt-0.5">{course.subtitle} Training Participant</span>
                     </h3>
                   </div>
