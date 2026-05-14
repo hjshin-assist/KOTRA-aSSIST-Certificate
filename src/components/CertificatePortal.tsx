@@ -15,10 +15,49 @@ export default function CertificatePortal({ course }: CertificatePortalProps) {
   const [unlockedIds, setUnlockedIds] = useState<Set<number>>(new Set());
   const [errors, setErrors] = useState<{ [key: number]: string }>({});
 
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+
   const maskName = (name: string) => {
     if (name.length <= 1) return name;
     if (name.length === 2) return name[0] + '*';
     return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+  };
+
+  const modalContent: { [key: string]: { title: string, content: React.ReactNode } } = {
+    guide: {
+      title: "이용안내",
+      content: (
+        <div className="space-y-4 text-slate-600 text-sm">
+          <p className="font-bold text-navy-brand">수료증 발급 방법:</p>
+          <ol className="list-decimal pl-4 space-y-2">
+            <li><strong>성함 확인:</strong> 목록에서 본인의 성함을 찾거나 상단 검색창을 이용해 검색하세요.</li>
+            <li><strong>본인 인증:</strong> 카드 우측 상단의 'Locked'를 클릭하거나 카드 영역을 선택한 후, 본인의 <strong>핸드폰 번호 뒷자리 4자리</strong>를 입력하세요.</li>
+            <li><strong>수료증 저장:</strong> 인증 완료 후 나타나는 <span className="text-amber-600 font-bold">금색 버튼</span>을 클릭하면 새 창에서 수료증이 열립니다. 브라우저의 저장/인쇄 아이콘을 사용하여 보관하세요.</li>
+          </ol>
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 mt-4 text-[13px]">
+            <p className="flex items-center gap-2 text-slate-500">
+              <Info size={14} /> 모바일 환경의 경우 브라우저에 따라 '파일 다운로드'가 차단될 수 있으니 가급적 PC 환경 사용을 권장합니다.
+            </p>
+          </div>
+        </div>
+      )
+    },
+    privacy: {
+      title: "개인정보처리방침",
+      content: (
+        <div className="space-y-4 text-slate-600 text-sm">
+          <p>KOTRA-aSSIST 수료증 발급 시스템은 개인정보 보호법에 따라 수료생의 정보를 안전하게 관리합니다.</p>
+          <div className="space-y-2">
+            <p><strong>1. 수집 항목:</strong> 성명, 핸드폰 번호(본인 인증용)</p>
+            <p><strong>2. 수집 목적:</strong> 교육과정 수료증 발급 및 대장 관리</p>
+            <p><strong>3. 보유 기간:</strong> 수료증 배포 기간 종료 후 3개월 이내 파기 (단, 법령에 따른 의무 보유 기간 제외)</p>
+          </div>
+          <p className="text-[13px] text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100">
+            * 본 시스템은 외부 검색 엔진에 노출되지 않으며, 성함 일부 마스킹 및 비밀번호 인증을 통해 타인의 정보 접근을 제한하고 있습니다.
+          </p>
+        </div>
+      )
+    }
   };
 
   const filteredStudents = students.filter(s => 
@@ -219,12 +258,58 @@ export default function CertificatePortal({ course }: CertificatePortalProps) {
       <footer className="bg-slate-900 text-slate-400 px-6 md:px-10 py-5 flex flex-col md:flex-row justify-between items-center text-[10px] border-t border-slate-800 shrink-0 gap-4 mt-auto">
         <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 md:gap-6">
           <span>© 2026 KOTRA-aSSIST 글로벌 비즈니스</span>
+          <div className="flex items-center space-x-4 border-l border-slate-700 pl-4">
+            <button onClick={() => setActiveModal('guide')} className="hover:text-white transition-colors cursor-pointer">이용안내</button>
+            <button onClick={() => setActiveModal('privacy')} className="hover:text-white transition-colors cursor-pointer font-bold">개인정보처리방침</button>
+          </div>
         </div>
         <div className="flex items-center space-x-3">
           <span className="text-slate-600 font-mono tracking-tighter uppercase">Secure Access Protocol v3.0</span>
           <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
         </div>
       </footer>
+
+      {/* Info Modal */}
+      <AnimatePresence>
+        {activeModal && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveModal(null)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100]"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-lg bg-white rounded-2xl shadow-2xl z-[101] overflow-hidden"
+            >
+              <div className="bg-slate-50 px-6 py-4 flex items-center justify-between border-b border-slate-100">
+                <h3 className="text-navy-brand font-bold uppercase tracking-widest text-xs">
+                  {modalContent[activeModal].title}
+                </h3>
+                <button 
+                  onClick={() => setActiveModal(null)}
+                  className="w-8 h-8 rounded-full hover:bg-slate-200 flex items-center justify-center text-slate-400 transition-colors"
+                >
+                  <Lock size={16} />
+                </button>
+              </div>
+              <div className="p-6">
+                {modalContent[activeModal].content}
+                <button 
+                  onClick={() => setActiveModal(null)}
+                  className="w-full mt-6 bg-slate-800 text-white text-xs font-bold py-3 rounded-lg hover:bg-slate-700 transition-all uppercase tracking-widest"
+                >
+                  확인
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
